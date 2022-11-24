@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false,
 		index:true
+	},
+	salt:{
+		type: String,
+		required: true,
 	}
 });
 

@@ -24,13 +24,20 @@ router.post("/", async (req, res) => {
 
 	// check whether the user already exists
 
-	let user = User.findOne({email:req.body.email})
-	if(user){
-		return res.status(400).send("User already registered");
-	}
-	// there is no user with the same email address
-	let save_user =  new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt });
-	save_user =save_user.save();
+	
+	try {
+		let user = User.findOne({email:req.body.email});
+		let save_user =  new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt });
+			
+		if(!user){
+			return res.status(400).send("User already registered");
+		}else{
+			// there is no user with the same email address
+			save_user =save_user.save();
+		}
+		
+	
+	
 
 	// Generate a building ID
 	const buildingId = Math.floor(100000 + Math.random() * 900000);
@@ -46,7 +53,9 @@ router.post("/", async (req, res) => {
 	res.status(200).send({buildingId:buildingId,user:save_user,building:save_building});
 
 	console.log(" building account manager user registered successfully ");
-
+} catch (error) {
+	res.status(400).send(error + " Problem occured");
+}
 });
 
 module.exports = router;

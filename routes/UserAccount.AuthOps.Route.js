@@ -20,11 +20,13 @@ router.post("/", async (req, res,next) => {
 	// check whether the user already exists
 
 	let user = User.findOne({email:email})
-	if(!user){
-		return res.status(400).send("User already registered");
-		console.log("User already registered");
-	}
 	// there is no user with the same email address
+		if(!user){
+			return res.status(400).send("User already registered");
+			console.log("User already registered");
+		}
+	
+	
 
 	 let building =Building.findOne({buildingId:buildingID});
 	 if(!building){

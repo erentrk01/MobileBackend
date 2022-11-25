@@ -8,7 +8,8 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 		minlength: 3,
 		maxlength: 30,
-		index: true
+		unique:false,
+	
 	},
 	email:{
 		type: String,
@@ -16,19 +17,18 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 		minlength: 5,
 		maxlength: 255,
-		index: true,
 	},
 	password: {
 		type: String,
 		required: true,
 		minlength: 6,
 		maxlength: 1024,
-		index: true,
+
 	  },
 	isManager: {
 		type: Boolean,
 		default: false,
-		index:true
+
 	},
 	salt:{
 		type: String,

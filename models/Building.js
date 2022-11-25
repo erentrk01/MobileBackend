@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 const BuildingSchema = new mongoose.Schema({
+	buildingId:{
+		type: Number,
+		required: true,
+	},
+	//userIDs:{
+		//type: [{type:mongoose.Schema.Types.ObjectId,ref:"User"}]
+	//},
+	
 	buildingName:{
 		type: String,
 		required: true,

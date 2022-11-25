@@ -29,7 +29,8 @@ router.post("/", async (req, res) => {
 		return res.status(400).send("User already registered");
 	}
 	// there is no user with the same email address
-	const save_user = await new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt }).save();
+	let save_user =  new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt });
+	save_user =save_user.save();
 
 	// Generate a building ID
 	const buildingId = Math.floor(100000 + Math.random() * 900000);

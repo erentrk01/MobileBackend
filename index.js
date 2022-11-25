@@ -6,10 +6,8 @@ require("dotenv").config();
 
 
 // Import Routes
-
-
-
-
+const authBuildingRoute = require("./routes/BuildingAccount.AuthOps.Route");
+const authUserRoute = require("./routes/UserAccount.AuthOps.Route");
 //
 
 
@@ -22,6 +20,12 @@ app.use(bodyParser.json());
 
 const port = process.env.PORT || 3000;
 
+app.use("/api/registerBuild", authBuildingRoute);
+app.use("/api/registerUser", authUserRoute);
+
+app.get("/", (req, res) => {
+	res.send("APP IS RUNNING");
+  });
 
 //! DB Connection
 const mongoUri = process.env.MONGO_URI;

@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const UserSchema = new mongoose.Schema({
+	buildingId:{
+		type:Number
+	},
 	name:{
 		type: String,
 		required: true,

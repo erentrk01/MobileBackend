@@ -6,34 +6,36 @@ const saltHashPassword = require("../utils/passwordUtils/saltHashPassword");
 const router = express.Router();
 
 //     "/registerBuilding"
-router.post("/", async (req, res,next) => {
+router.post("/", async (req, res) => {
 
 	// Building Manager Registration
 
-	const { name, email, password,buildingName,buildingAddress} = req.body;
+
 	// the creator of the building account is automatically assigned as a manager of the building account
 	const isManager = true; 
 	
-	const plaint_password = password;
+	
+	const plaint_password = req.body.password;
 	const hash_data =saltHashPassword(plaint_password);
     const save_password = hash_data.passwordHash;//save the hashed password
 	var salt = hash_data.salt;//save the salt
-
+	console.log(req.body.name);
+	console.log(req.body);
 
 	// check whether the user already exists
 
-	let user = User.findOne({email:email})
+	let user = User.findOne({email:req.body.email})
 	if(!user){
 		return res.status(400).send("User already registered");
 	}
 	// there is no user with the same email address
-	const save_user = await new User({name, email, save_password,isManager,salt }).save();
+	const save_user = await new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt }).save();
 
 	// Generate a building ID
 	const buildingId = Math.floor(100000 + Math.random() * 900000);
 	console.log(Math.floor(100000 + Math.random() * 900000));
 	// save building information
-	const save_building = await new Building({buildingId,buildingName,buildingAddress,events}).save();
+	const save_building = await new Building({buildingId:buildingId,buildingName:req.body.buildingName,buildingAddress:req.body.buildingAddress}).save();
 
 	if(!save_building){
 		return res.status(400).send("Building account creation failed");

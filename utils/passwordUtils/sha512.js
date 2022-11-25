@@ -3,6 +3,7 @@ const sha512 = (password,salt)=>{
 	const hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
 	hash.update(password);
 	const value = hash.digest('hex');
+	console.log(value);
 	return{
 		salt:salt,
 		passwordHash:value

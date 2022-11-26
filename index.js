@@ -8,6 +8,7 @@ require("dotenv").config();
 // Import Routes
 const authBuildingRoute = require("./routes/BuildingAccount.AuthOps.Route");
 const authUserRoute = require("./routes/UserAccount.AuthOps.Route");
+const residentControllerRoute = require("./routes/Controllers/resident.controller");
 //
 
 
@@ -24,6 +25,7 @@ const port = process.env.PORT || 3000;
 
 app.use("/api/registerBuild", authBuildingRoute);
 app.use("/api/registerUser", authUserRoute);
+app.use(residentControllerRoute);
 
 app.get("/", (req, res) => {
 	res.send("APP IS RUNNING");

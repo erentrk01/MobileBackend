@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const {Event} = require("./Event");
 const BuildingSchema = new mongoose.Schema({
 	buildingId:{
 		type: Number,
@@ -21,6 +22,7 @@ const BuildingSchema = new mongoose.Schema({
 		maxlength: 255,
 	},
 	events: [{type:mongoose.Schema.Types.ObjectId,ref:"Event"}]
+		
 
 });
 

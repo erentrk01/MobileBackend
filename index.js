@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const port = process.env.PORT || 3000;
 
-app.use("/api/registerBuild", authBuildingRoute);
+app.use("/registerBuild", authBuildingRoute);
 app.use( authUserRoute);
 app.use(residentControllerRoute);
 

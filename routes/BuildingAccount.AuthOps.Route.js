@@ -34,7 +34,9 @@ router.post("/", async (req, res) => {
 	save_user = await save_user.save();
 
 	// Generate a building ID
-	const buildingId = Math.floor(100000 + Math.random() * 900000);
+	let randomNum=Math.floor(100000 + Math.random() * 900000);
+	const buildingId = randomNum.toString();
+	
 	//console.log(Math.floor(100000 + Math.random() * 900000));
 	// save building information
 	

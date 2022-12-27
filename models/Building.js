@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const {Event} = require("./Event");
 const BuildingSchema = new mongoose.Schema({
 	buildingId:{
-		type: Number,
+		type: String,
 		required: true,
 	},
 	userIDs:{

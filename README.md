@@ -28,7 +28,7 @@ buildingId, email,eventTitle, eventDate, eventDescription,functionalArea,conditi
 ******************************************************************************************************
 DELETE EVENT
 ENDPOINT:
-https://mobile-backend-6khq.vercel.app/deleteEvent/:id
+https://mobile-backend-ak18.vercel.app/deleteEvent/:id
 *******************************************************
 Fetch all events array of a building from DB
 ENDPOINT:

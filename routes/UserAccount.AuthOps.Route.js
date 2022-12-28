@@ -76,10 +76,12 @@ router.post("/loginUser", async (req, res) => {
 	
 	//console.log(user.salt);
 	const salt = user.salt;
+	const bid=user.buildingId;
+	
 	// Hash user password with salt, if hash data equals to password, then login success
 	let hashedPassword = checkHashPassword(password, salt).passwordHash;
 	let encryptedPassword = user.password;
-	if (hashedPassword === encryptedPassword) return res.status(200).send({message:"login success",user:user});
+	if (hashedPassword === encryptedPassword) return res.status(200).send({message:"login success",user:user,buildingId:bid});
 	console.log("password is wrong");
 	return res.status(400).send("password is wrong");
 	//

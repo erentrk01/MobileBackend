@@ -40,7 +40,7 @@ router.post("/registerUser", async (req, res,next) => {
 	 if(!building) return res.status(400).send("Building account does not exist,register failed");
 
 			// create a new user
-	let user = new User({
+	const  user = new User({
 		name: name,
 	buildingId:buildingId,
 	email: email,
@@ -50,11 +50,11 @@ router.post("/registerUser", async (req, res,next) => {
 	});
 
 
-	user = await user.save();
+	 let usr = await user.save();
 
 
 
-	res.status(200).send({message:"succesful reg",user:user});
+	res.status(200).send({message:"succesful reg",user:usr});
 
 	console.log("user registered successfully under a building account ");
 

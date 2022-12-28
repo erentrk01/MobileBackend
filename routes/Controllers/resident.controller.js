@@ -16,7 +16,10 @@ router.post("/createEvent", async (req, res,next) => {
 	let user = await User.findOne({email});
 	if(!user) return res.status(400).send("User does not exist, event creation failed");
 	const userId = user.userId;
-	let event = await Event({buildingId,userId,eventTitle, eventDescription,functionalArea,condition,serviceContactPhone}).save();
+	let date = new Date();
+	date= date.toString();
+	let event = await Event({buildingId,userId,eventTitle, eventDescription,functionalArea,condition,serviceContactPhone,date}).save();
+	
 	
 	if(!event) return res.status(400).send("Event creation failed");
 	res.status(200).send({buildingId,userId, eventTitle, eventDate, eventDescription,condition,serviceContactPhone});
@@ -27,6 +30,7 @@ router.post("/createEvent", async (req, res,next) => {
 				eventDescription:event.eventDescription,
 				functionalArea:event.functionalArea,
 				condition:event.condition,
+				date:date
 		
 			}}
 	});

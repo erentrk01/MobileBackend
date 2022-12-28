@@ -26,30 +26,40 @@ router.post("/", async (req, res) => {
 
 	
 	let user = await User.findOne({email:req.body.email});
+	User.findOne({email:req.body.email}, function(err, user) {
+		if (err) throw err;
+	  
+	// object of the user
+})
+	
 	
 	if(user) return res.status(400).send("User already registered");
-	
-	// there is no user with the same email address
-	let save_user = await new User({name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt });
-	save_user = await save_user.save();
-
 	// Generate a building ID
 	let randomNum=Math.floor(100000 + Math.random() * 900000);
 	const buildingId = randomNum.toString();
+
+	let building = await Building.findOne({buildingId:buildingId});
+
+	if(building) return res.status(400).send("Building account creation failed");
+	
+	
+	
+	// there is no user with the same email address
+	const save_user = await new User({buildingId:buildingId,name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt});
+	
+	let save_userr = await save_user.save();
+
 	
 	//console.log(Math.floor(100000 + Math.random() * 900000));
 	// save building information
 	
-	let building = await Building.findOne({buildingId:buildingId});
-
-	if(building) return res.status(400).send("Building account creation failed");
 	
 	const save_building = await new Building({buildingId:buildingId,buildingName:req.body.buildingName,buildingAddress:req.body.buildingAddress}).save();
 
 	console.log(save_building);
 
 // json response .user and .building
-	res.status(200).send({buildingId:buildingId,user:save_user,building:save_building});
+	res.status(200).send({user:save_userr});
 
 	console.log(" building account manager user registered successfully ");
 });

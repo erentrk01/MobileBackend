@@ -3,7 +3,7 @@ Nodejs API for android app
 
 LOGIN USER
 ENDPOINT:
-https://mobile-backend-ak18.vercel.app/loginUser
+https://mobile-backend-s6ep.vercel.app/loginUser
 REQ BODY:
 email
 password

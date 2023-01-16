@@ -36,6 +36,30 @@ https://mobile-backend-ak18.vercel.app/fetchEvents/:buildingId
 ***************************************************************
 
 
+Actors:
+Residents
+Managers (for each building)
+Workers
+Use Cases:
+
+Create Building Account (Manager)
+Create Resident Account (Residents)
+Authenticate (Residents, Manager)
+Create Event (Residents, Manager, Workers)
+Associations:
+
+Manager can create Building Account, It is also a resident account
+Residents can create Resident Account
+Resident Account need to be authenticated with Building ID and password at the registration.
+Users and Manager can create events
+Note: This is a high-level representation of the use case diagram, and there may be additional use cases or details that would need to be included for a more complete picture.
+
+
+
+
+
+
+
 
 
 

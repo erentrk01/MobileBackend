@@ -30,10 +30,11 @@ const UserSchema = new mongoose.Schema({
 		default: false,
 
 	},
-	salt:{
-		type: String,
-		required: true,
-	}
+	verified: {
+		type: Boolean,
+		default: false,
+		index: true,
+	  }
 });
 
 const User = mongoose.model("User", UserSchema);

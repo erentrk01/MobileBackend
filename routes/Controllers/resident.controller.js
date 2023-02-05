@@ -1,12 +1,16 @@
 const {Event} = require("../../models/Event");
 const {User} = require("../../models/User");
+const {Token} = require("../../models/Token");
 const {Building} = require("../../models/Building");
+
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const requireAuth = require("../../middlewares/requireAuth");
+
 
 //  Endpoint for creating an event
-router.post("/createEvent", async (req, res,next) => {
+router.post("/createEvent",requireAuth,async (req, res,next) => {
 	// Create Event
 	// frontend sends user s email ,buildingId, eventTitle, eventDescription, eventDate,functionalArea ,condition ,serviceContactPhone 
 	const { buildingId, email,eventTitle, eventDate, eventDescription,functionalArea,condition,serviceContactPhone} = req.body;
@@ -45,7 +49,7 @@ router.post("/createEvent", async (req, res,next) => {
 
 //! @route DELETE /deleteFile/:id
 //! @desc Delete a file from DB
-router.delete("/deleteEvent/:id", async (req, res,next) => {
+router.delete("/deleteEvent/:id",requireAuth ,async (req, res,next) => {
 	const id = req.params.id;
 	if (!id || id === "undefined") return res.status(400).send("No File ID");
 	const _id = new mongoose.Types.ObjectId(id);
@@ -58,7 +62,7 @@ router.delete("/deleteEvent/:id", async (req, res,next) => {
 
 //! @route GET /fetchEvents
 //! @desc Fetch all events array of a building from DB
-router.get("/fetchEvents/:buildingId", async (req, res,next) => {
+router.get("/fetchEvents/:buildingId",requireAuth ,async (req, res,next) => {
 	// email and buildingId are sent from frontend
 	// output two dim array
 
@@ -125,6 +129,41 @@ router.get("/getResidents/:buildingId", async (req, res,next) => {
 	console.log("building residents:" + buildingResidents);
 	res.status(200).json({residents:itemObjects});
 });
+
+router.get("/:id/verify/:token", async (req, res) => {
+	try {
+	  console.log("heyy");
+	  const user = await User.findOne({ _id: req.params.id });
+	  if (!user) return res.status(400).send({ message: "Invalid Link" });
+	  console.log(user);
+	  console.log(req.params.token);
+	  console.log(typeof req.params.token);
+	  //console.log(mongoose.Types.ObjectId(req.params.token));
+	  const token = await Token.findOne({
+		userId: user._id,
+		token: req.params.token,
+	  });
+	  console.log("token findounu geçti");
+	  console.log(token);
+  
+	  if (!token) return res.status(400).send({ message: "Invalid Link" });
+  
+	  await User.updateOne({ _id: user._id }, { verified: true });
+  
+	  console.log("updateyi geçti");
+	  console.log(user);
+	  console.log(user.verified);
+	  await token.remove();
+	  let usr = await User.findOne({ _id: req.params.id });
+  
+	  res
+		.status(200)
+		.send({ message: "Account Verified", verified: usr.verified });
+	} catch (err) {
+	  console.log(err);
+	  res.status(500).send({ message: "Internal Server Error" });
+	}
+  });
 
 
 module.exports = router;

@@ -1,6 +1,18 @@
 //create building account and assign the creator user as a manager of the building  account
 const { User } = require("../models/User");
 const { Building } = require("../models/Building");
+
+const bcrypt = require("bcryptjs");
+const Joi = require("joi");
+const passwordComplexity=require("joi-password-complexity");
+const generateAuthToken =require("../utils/genAuthToken");
+
+//mail imports
+const Token = require("../models/Token");
+const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
+//
+
 const express = require("express");
 const saltHashPassword = require("../utils/passwordUtils/saltHashPassword");
 const router = express.Router();
@@ -13,14 +25,16 @@ router.post("/", async (req, res) => {
 
 	// the creator of the building account is automatically assigned as a manager of the building account
 	const isManager = true; 
+
+	const schema = Joi.object({
+		email: Joi.string().required().email().label("Email"),
+		password: passwordComplexity().required().label("Password"),
+	  });
+	const { error } = schema.validate(req.body);
+	if (error) return res.status(400).send(error.details[0].message);
+
 	
-	
-	const plaint_password = req.body.password;
-	const hash_data =saltHashPassword(plaint_password);
-	const save_password = hash_data.passwordHash;//save the hashed password
-	var salt = hash_data.salt;//save the salt
-	console.log(req.body.name);
-	console.log(req.body);
+
 
 	// check whether the user already exists
 
@@ -32,8 +46,8 @@ router.post("/", async (req, res) => {
 	// object of the user
 })
 	
-	
 	if(user) return res.status(400).send("User already registered");
+
 	// Generate a building ID
 	let randomNum=Math.floor(100000 + Math.random() * 900000);
 	const buildingId = randomNum.toString();
@@ -44,9 +58,13 @@ router.post("/", async (req, res) => {
 	
 	
 	
-	// there is no user with the same email address
-	const save_user = await new User({buildingId:buildingId,name:req.body.name, email:req.body.email, password:save_password,isManager:isManager,salt:salt});
-	
+	// there is no user with the same email address and building account does not exist
+	const save_user = await new User({buildingId:buildingId,name:req.body.name, email:req.body.email, password:req.body.password,isManager:isManager});
+
+	const salt = await bcrypt.genSalt(10);
+
+	save_user.password = await bcrypt.hash(user.password, salt);
+
 	let save_userr = await save_user.save();
 
 	
@@ -58,8 +76,23 @@ router.post("/", async (req, res) => {
 
 	console.log(save_building);
 
-// json response .user and .building
-	res.status(200).send({user:save_userr});
+	if (!save_user.verified) {
+		let tokenVrf = await Token.findOne({ userId: save_user._id });
+		//email verify token
+		if (!tokenVrf) {
+		  const tokenVrf = await new Token({
+			userId: save_user._id,
+			token: crypto.randomBytes(12).toString("hex"),
+		  }).save();
+	
+		  const url = `${process.env.BASE_URL}${save_user._id}/verify/${tokenVrf.token}`;
+		  // send verify email
+		  await sendEmail(save_user.email, "Quickfixr-Verify Email", url);
+		}
+	  }
+
+	const token = generateAuthToken(save_user);
+	res.send(token);
 
 	console.log(" building account manager user registered successfully ");
 });

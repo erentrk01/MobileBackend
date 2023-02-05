@@ -1,11 +1,22 @@
 //create user account under an existing building account
 const { User } = require("../models/User");
 const { Building } = require("../models/Building");
+
+const bcrypt = require("bcryptjs");
+const Joi = require("joi");
+const passwordComplexity=require("joi-password-complexity");
+const generateAuthToken =require("../utils/genAuthToken");
+
+//mail imports
+const Token = require("../models/Token");
+const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
+//
+
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const saltHashPassword = require("../utils/passwordUtils/saltHashPassword");
-const checkHashPassword = require("../utils/passwordUtils/checkHashPassword");
+
 
 // Endpoint:	 "/registerUser"
 router.post("/registerUser", async (req, res,next) => {
@@ -19,10 +30,16 @@ router.post("/registerUser", async (req, res,next) => {
 	const password = req.body.password;
 	// the creator of the building account is automatically assigned as a manager of the building account
 	const isManager = false;
-	const plaint_password = password;
-	const hash_data =saltHashPassword(plaint_password);
-	const save_password = hash_data.passwordHash;//save the hashed password
-	var salt = hash_data.salt;//save the salt
+
+	const schema = Joi.object({
+		email: Joi.string().required().email().label("Email"),
+		password: passwordComplexity().required().label("Password"),
+	  });
+	  const { error } = schema.validate(req.body)
+	  if (error) return res.status(400).send(error.details[0].message);
+
+	
+
 	// check whether the user already exists
 	console.log(email);
 
@@ -38,6 +55,7 @@ router.post("/registerUser", async (req, res,next) => {
 
 	 let building = await Building.findOne({buildingId:buildingId});
 	 if(!building) return res.status(400).send("Building account does not exist,register failed");
+	
 
 			// create a new user
 	const  user = new User({
@@ -49,12 +67,30 @@ router.post("/registerUser", async (req, res,next) => {
 	isManager:isManager
 	});
 
+	const salt = await bcrypt.genSalt(10);
+	user.password = await bcrypt.hash(user.password, salt);
 
 	 let usr = await user.save();
 
+	 if (!usr.verified) {
+		let tokenVrf = await Token.findOne({ userId: usr._id });
+		//email verify token
+		if (!tokenVrf) {
+		  const tokenVrf = await new Token({
+			userId: usr._id,
+			token: crypto.randomBytes(12).toString("hex"),
+		  }).save();
+	
+		  const url = `${process.env.BASE_URL}${usr._id}/verify/${tokenVrf.token}`;
+		  // send verify email
+		  await sendEmail(usr.email, "Netcad3d-Verify Email", url);
+		}
+	  }
 
 
-	res.status(200).send({message:"succesful reg",user:usr});
+
+	  const token = generateAuthToken(user);
+	  res.send(token);
 
 	console.log("user registered successfully under a building account ");
 

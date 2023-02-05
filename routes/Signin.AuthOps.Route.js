@@ -6,7 +6,7 @@ const { User } = require("../models/User");
 const generateAuthToken = require("../utils/genAuthToken");
 
 //mail imports
-const Token=require("../models/token");
+const Token=require("../models/Token");
 const sendEmail=require("../utils/sendEmail");
 const crypto=require("crypto");
 //

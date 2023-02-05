@@ -14,7 +14,6 @@ const crypto = require("crypto");
 //
 
 const express = require("express");
-const saltHashPassword = require("../utils/passwordUtils/saltHashPassword");
 const router = express.Router();
 
 // Endpoint:  "/registerBuilding"

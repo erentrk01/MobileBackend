@@ -1,6 +1,6 @@
 const {Event} = require("../../models/Event");
 const {User} = require("../../models/User");
-const {Token} = require("../../models/Token");
+const {Token}= require("../../models/Token");
 const {Building} = require("../../models/Building");
 
 const express = require("express");
@@ -133,12 +133,14 @@ router.get("/getResidents/:buildingId", async (req, res,next) => {
 router.get("/:id/verify/:token", async (req, res) => {
 	try {
 	  console.log("heyy");
+
 	  const user = await User.findOne({ _id: req.params.id });
 	  if (!user) return res.status(400).send({ message: "Invalid Link" });
 	  console.log(user);
 	  console.log(req.params.token);
 	  console.log(typeof req.params.token);
 	  //console.log(mongoose.Types.ObjectId(req.params.token));
+	  console.log(Token);
 	  const token = await Token.findOne({
 		userId: user._id,
 		token: req.params.token,

@@ -1,6 +1,6 @@
 const {Event} = require("../../models/Event");
 const {User} = require("../../models/User");
-const {Token}= require("../../models/Token");
+const {Token}= require("../../models/token");
 const {Building} = require("../../models/Building");
 
 const express = require("express");

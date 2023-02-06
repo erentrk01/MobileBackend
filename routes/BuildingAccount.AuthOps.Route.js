@@ -28,11 +28,12 @@ router.post("/", async (req, res) => {
 	const schema = Joi.object({
 		email: Joi.string().required().email().label("Email"),
 		password: passwordComplexity().required().label("Password"),
+		buildingAddress:Joi.string().trim().max(100).required(),
+		buildingName:Joi.string().trim().max(30).required(),
+		name:Joi.string().max(30).required(),
 	  });
 	const { error } = schema.validate(req.body);
 	if (error) return res.status(400).send(error.details[0].message);
-
-	
 
 
 	// check whether the user already exists
@@ -58,13 +59,16 @@ router.post("/", async (req, res) => {
 	
 	
 	// there is no user with the same email address and building account does not exist
-	const save_user = await new User({buildingId:buildingId,name:req.body.name, email:req.body.email, password:req.body.password,isManager:isManager});
+	
 
 	const salt = await bcrypt.genSalt(10);
 
-	save_user.password = await bcrypt.hash(user.password, salt);
+	const hashedpass  = await bcrypt.hash(req.body.password, salt)
+	;
+	const save_user = await new User({buildingId:buildingId,name:req.body.name, email:req.body.email, password:hashedpass,isManager:isManager});
 
 	let save_userr = await save_user.save();
+	console.log("hey")
 
 	
 	//console.log(Math.floor(100000 + Math.random() * 900000));
@@ -76,7 +80,7 @@ router.post("/", async (req, res) => {
 	console.log(save_building);
 
 	if (!save_user.verified) {
-		let tokenVrf = await Token.findOne({ userId: save_user._id });
+		let tokenVrf = await Token.findOne({ userId: save_userr._id });
 		//email verify token
 		if (!tokenVrf) {
 		  const tokenVrf = await new Token({
@@ -86,11 +90,11 @@ router.post("/", async (req, res) => {
 	
 		  const url = `${process.env.BASE_URL}${save_user._id}/verify/${tokenVrf.token}`;
 		  // send verify email
-		  await sendEmail(save_user.email, "Quickfixr-Verify Email", url);
+		  await sendEmail(save_userr.email, "Quickfixr-Verify Email", url);
 		}
 	  }
 
-	const token = generateAuthToken(save_user);
+	const token = generateAuthToken(save_userr);
 	res.send(token);
 
 	console.log(" building account manager user registered successfully ");

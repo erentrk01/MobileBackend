@@ -33,6 +33,7 @@ router.post("/registerUser", async (req, res,next) => {
 
 	const schema = Joi.object({
 		email: Joi.string().required().email().label("Email"),
+		name:Joi.string().required().max(30),
 		password: passwordComplexity().required().label("Password"),
 	  });
 	  const { error } = schema.validate(req.body)

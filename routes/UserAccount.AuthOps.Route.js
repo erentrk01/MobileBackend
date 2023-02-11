@@ -5,7 +5,7 @@ const { Building } = require("../models/Building");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
 const passwordComplexity=require("joi-password-complexity");
-const generateAuthToken =require("../utils/genAuthToken");
+const generateAuthToken =require("../utils/jwt.utils");
 
 //mail imports
 const {Token} = require("../models/token");

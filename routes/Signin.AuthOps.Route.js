@@ -3,7 +3,8 @@ const Joi = require("joi");
 const express = require("express");
 
 const { User } = require("../models/User");
-const generateAuthToken = require("../utils/genAuthToken");
+const generateAuthToken = require("../utils/jwt.utils");
+const { genAccessToken, genRefreshToken } =require("../utils/jwt.utils");
 
 //mail imports
 const Token=require("../models/token");
@@ -11,6 +12,8 @@ const sendEmail=require("../utils/sendEmail");
 const crypto=require("crypto");
 //
 const router = express.Router();
+
+let refreshTokens = [];
 router.post("/signin", async (req, res) => {
 	const schema = Joi.object({
 	  email: Joi.string().min(5).max(255).required().email().messages({
@@ -51,11 +54,77 @@ router.post("/signin", async (req, res) => {
 	  if(!user.verified)
 	  res.status(400).write("An Email sent to your account ,please verify your email first");
   
+	  const accessToken = genAccessToken(user);
+	  const refreshToken = genRefreshToken(user);
+
+
+  		// Set refersh token in refreshTokens array
+ 		refreshTokens.push(refreshToken);
+		
   
-	const token = generateAuthToken(user);
-  
-	res.status(200).write(token);
-	res.end();
+	res.status(200).send({ user, accessToken, refreshToken })
+	
   });
+
+ // Create new access token from refresh token
+router.post("/token", async (req, res) => {
+ const { refreshToken } = req.headers;
+
+  
+	// If token is not provided, send error message
+	if (!refreshToken) {
+	  res.status(401).json({
+		errors: [
+		  {
+			msg: "Token not found",
+		  },
+		],
+	  });
+	}
+  
+	// If token does not exist, send error message
+	if (!refreshTokens.includes(refreshToken)) {
+	  res.status(403).json({
+		errors: [
+		  {
+			msg: "Invalid refresh token",
+		  },
+		],
+	  });
+	}
+  
+	try {
+	  const user = await JWT.verify(
+		refreshToken,
+		process.env.REFRESH_TOKEN_SECRET_KEY
+	  );
+	  // user = { email: 'jame@gmail.com', iat: 1633586290, exp: 1633586350 }
+	  const { email } = user;
+	  const accessToken = await JWT.sign(
+		{ email },
+		process.env.JWT_SECRET,
+		{ expiresIn: "1h" }
+	  );
+	  res.json( accessToken );
+	} catch (error) {
+	  res.status(403).json({
+		errors: [
+		  {
+			msg: "Invalid token",
+		  },
+		],
+	  });
+	}
+  });
+
+  // Deauthenticate - log out
+// Delete refresh token
+router.delete("/logout", (req, res) => {
+	const refreshToken = req.headers
+  
+	refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+	res.sendStatus(204);
+  });
+  
   
   module.exports = router;

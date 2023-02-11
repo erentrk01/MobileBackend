@@ -5,10 +5,11 @@ const { Building } = require("../models/Building");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
 const passwordComplexity=require("joi-password-complexity");
-const generateAuthToken =require("../utils/genAuthToken");
+
 
 //mail imports
 const {Token} = require("../models/token");
+const { genAccessToken } = require("../utils/jwt.utils");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 //
@@ -94,8 +95,8 @@ router.post("/", async (req, res) => {
 		}
 	  }
 
-	const token = generateAuthToken(save_userr);
-	res.send(token);
+	const accessToken = genAccessToken(save_userr);
+	res.send(accessToken);
 
 	console.log(" building account manager user registered successfully ");
 });

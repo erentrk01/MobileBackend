@@ -62,7 +62,7 @@ router.delete("/deleteEvent/:id",requireAuth ,async (req, res,next) => {
 
 //! @route GET /fetchEvents
 //! @desc Fetch all events array of a building from DB
-router.get("/fetchEvents/:buildingId",requireAuth ,async (req, res,next) => {
+router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 	// email and buildingId are sent from frontend
 	// output two dim array
 
@@ -109,7 +109,7 @@ router.get("getEvent/:eventId", async (req, res,next) => {
 
 //! @route GET /getResidents/:buildingId
 //! @desc Fetch all residents of  the building matching requested building Id from DB
-router.get("/getResidents/:buildingId", async (req, res,next) => {
+router.get("/getResidents/:buildingId",requireAuth, async (req, res,next) => {
 	//  buildingId is sent from frontend
 	
 
@@ -166,6 +166,13 @@ router.get("/:id/verify/:token", async (req, res) => {
 	  res.status(500).send({ message: "Internal Server Error" });
 	}
   });
+
+  router.get("/building/:buildingId", async (req, res) => {
+	//  buildingId is sent from frontend
+	const building = await Building.findOne({buildingId:req.params.buildingId})
+	if(!building) return res.status(400).send("No building founded with this id ");
+	res.status(200).json({building:building});
+  })
 
 
 module.exports = router;

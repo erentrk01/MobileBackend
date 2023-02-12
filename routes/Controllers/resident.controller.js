@@ -49,7 +49,8 @@ router.post("/createEvent",requireAuth,async (req, res,next) => {
 
 //! @route DELETE /deleteFile/:id
 //! @desc Delete a file from DB
-router.delete("/deleteEvent/:id",requireAuth ,async (req, res,next) => {
+router.delete("/deleteEvent/:id" ,async (req, res,next) => {
+	console.log("delete event request received")
 	const id = req.params.id;
 	if (!id || id === "undefined") return res.status(400).send("No File ID");
 	const _id = new mongoose.Types.ObjectId(id);
@@ -57,6 +58,12 @@ router.delete("/deleteEvent/:id",requireAuth ,async (req, res,next) => {
 	if (!file) return res.status(400).send("No File Found");
 
 	await Event.findByIdAndDelete(id);
+	//
+	Building.updateOne({}, { $pull: { events: _id } }, function(err) {
+		if (err) throw err;
+		
+		console.log("Event removed from the Building document!");
+	  });
 	res.status(202).send("Event Deleted");
 });
 
@@ -72,7 +79,7 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 	let buildingEvents = await Building.find({ buildingId }).select('events');
 	// send the building events array
 	if(buildingEvents == null) return res.status(400).send("No building founded with this id ");
-	console.log("building events:" + buildingEvents);
+	//console.log("building events:" + buildingEvents);
 	
 	const items = Object.values(buildingEvents).map((value)=>value.events);
 	var  itemObjects=[];
@@ -83,7 +90,7 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 		
 	}
 	
-	console.log(itemObjects);
+	console.log("item objects: " +itemObjects.length);
 	res.status(200).json({events:itemObjects});
 
 	

@@ -52,7 +52,7 @@ router.post("/signin", async (req, res) => {
 
 	  console.log(user.verified);
 	  if(!user.verified)
-	  res.status(400).write("An Email sent to your account ,please verify your email first");
+	  res.status(400).send("An Email sent to your account ,please verify your email first");
   
 	  const accessToken = genAccessToken(user);
 	  const refreshToken = genRefreshToken(user);
@@ -62,7 +62,7 @@ router.post("/signin", async (req, res) => {
  		refreshTokens.push(refreshToken);
 		
   
-	res.status(200).send({ user, accessToken, refreshToken })
+	res.status(200).json({ user, accessToken, refreshToken })
 	
   });
 

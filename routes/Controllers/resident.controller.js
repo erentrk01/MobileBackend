@@ -49,22 +49,39 @@ router.post("/createEvent",requireAuth,async (req, res,next) => {
 
 //! @route DELETE /deleteFile/:id
 //! @desc Delete a file from DB
-router.delete("/deleteEvent/:id" ,async (req, res,next) => {
+router.delete("/deleteEvent/:id/:buildingId" ,async (req, res,next) => {
 	console.log("delete event request received")
 	const id = req.params.id;
-	if (!id || id === "undefined") return res.status(400).send("No File ID");
-	const _id = new mongoose.Types.ObjectId(id);
-	const file = await Event.findOneAndDelete({ eventId: _id });
-	if (!file) return res.status(400).send("No File Found");
+	const buildingId = req.params.buildingId;
 
-	await Event.findByIdAndDelete(id);
+	const _id = new mongoose.Types.ObjectId(id);
+//
+	
+		const event = await Event.findByIdAndRemove(_id);
+		if (!event) return res.status(404).send({ error: 'Event not found' });
+
+	
 	//
-	Building.updateOne({}, { $pull: { events: _id } }, function(err) {
-		if (err) throw err;
-		
-		console.log("Event removed from the Building document!");
-	  });
-	res.status(202).send("Event Deleted");
+	try{
+	const building = await Building.find({buildingId});
+	if (!building) {
+		return { error: 'Building not found' };
+	  }
+  
+	  const eventIndex = building.events.indexOf(eventId);
+  
+	  if (eventIndex === -1) {
+		return res.status(404).send({ error: 'Event not found' });
+	  }
+  
+	  building.events.splice(eventIndex, 1);
+	  await building.save();
+
+	 return res.status(202).send("Event Deleted");
+	
+	}catch(err){
+		return res.status(500).send("Event Delete failed");
+	}
 });
 
 //! @route GET /fetchEvents
@@ -84,9 +101,11 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 	const items = Object.values(buildingEvents).map((value)=>value.events);
 	var  itemObjects=[];
 	for(var i=0;i<items[0].length;i++){
+		console.log("96: "+items[0][i])
 		let event = await Event.find({_id:items[0][i]});
-		if(event == null) return res.status(400).send("No event founded with this id ");
-	itemObjects.push(event);
+		if(event.length !== 0)
+		{console.log("event:" + event)
+			itemObjects.push(event);}
 		
 	}
 	

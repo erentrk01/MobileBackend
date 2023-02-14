@@ -7,13 +7,15 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const requireAuth = require("../../middlewares/requireAuth");
+const _ = require('lodash');
+
 
 
 //  Endpoint for creating an event
 router.post("/createEvent",requireAuth,async (req, res,next) => {
 	// Create Event
 	// frontend sends user s email ,buildingId, eventTitle, eventDescription, eventDate,functionalArea ,condition ,serviceContactPhone 
-	const { buildingId, email,eventTitle, eventDate, eventDescription,functionalArea,condition,serviceContactPhone} = req.body;
+	const { buildingId, email,title, eventDate, eventDescription,functionalArea,condition,serviceContactPhone} = req.body;
 	console.log("istek gönderildi");
 	console.log("buildingId value:"+buildingId);
 	console.log("email value:"+email);
@@ -22,34 +24,28 @@ router.post("/createEvent",requireAuth,async (req, res,next) => {
 	const userId = user.userId;
 	let date = new Date();
 	date= date.toString();
-	let event = await Event({buildingId,userId,eventTitle, eventDescription,functionalArea,condition,serviceContactPhone,date}).save();
+	let event = await Event({buildingId,userId,title, eventDescription,functionalArea,condition,serviceContactPhone,date}).save();
 	
 	
 	if(!event) return res.status(400).send("Event creation failed");
-	res.status(200).send({buildingId,userId, eventTitle, eventDate, eventDescription,condition,serviceContactPhone});
-	console.log("event id:"+ event._id);
-		const building= await Building.findOneAndUpdate({buildingId},{
-			$push: {events:{_id:new mongoose.Types.ObjectId(event._id),
-				eventTitle:event.eventTitle,
-				eventDescription:event.eventDescription,
-				functionalArea:event.functionalArea,
-				condition:event.condition,
-				date:date
-		
-			}}
-	});
+	res.status(200).send({buildingId,userId, title, eventDate, eventDescription,condition,serviceContactPhone});
 
-		
-		console.log("Event created successfully pushed into building events array");
-		if(!building) return res.status(400).send("Event push  failed");
-		console.log("building event array:"+building.events);
+	const building = await Building.findOne({buildingId});
+
+  if (!building) {
+    return res.status(404).json({ message: 'Building not found' });
+  }
+  building.events.push(event);
+  await building.save();
+
+  return res.status(201).json(event);
 	
 
 });
 
 //! @route DELETE /deleteFile/:id
 //! @desc Delete a file from DB
-router.delete("/deleteEvent/:id/:buildingId" ,async (req, res,next) => {
+router.delete("/deleteEvent/:id/:buildingId" ,requireAuth,async (req, res,next) => {
 	console.log("delete event request received")
 	const id = req.params.id;
 	const buildingId = req.params.buildingId;
@@ -63,21 +59,17 @@ router.delete("/deleteEvent/:id/:buildingId" ,async (req, res,next) => {
 	
 	//
 	try{
-	const building = await Building.find({buildingId});
-	if (!building) {
-		return { error: 'Building not found' };
-	  }
-  
-	  const eventIndex = building.events.indexOf(eventId);
-  
-	  if (eventIndex === -1) {
-		return res.status(404).send({ error: 'Event not found' });
-	  }
-  
-	  building.events.splice(eventIndex, 1);
-	  await building.save();
+		const building = await Building.findOneAndUpdate(
+			{ buildingId },
+			{ $pull: { events: { _id } } },
+			{ new: true }
+		  );
+		
+		  if (!building) {
+			return res.status(404).json({ message: 'Building not found' });
+		  }
 
-	 return res.status(202).send("Event Deleted");
+		  return res.status(201).json(building);
 	
 	}catch(err){
 		return res.status(500).send("Event Delete failed");
@@ -89,33 +81,45 @@ router.delete("/deleteEvent/:id/:buildingId" ,async (req, res,next) => {
 router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 	// email and buildingId are sent from frontend
 	// output two dim array
-
+	const query = req.query.q; // the search query from the frontend
 	const buildingId = req.params.buildingId;
+	const page = parseInt(req.query.page) || 1; // the current page, defaulting to 1
+	const pageSize = 5; // the number of events to include on each page
+  
 	
 
-	let buildingEvents = await Building.find({ buildingId }).select('events');
+	let building= await Building.findOne({ buildingId }).populate('events');
 	// send the building events array
-	if(buildingEvents == null) return res.status(400).send("No building founded with this id ");
+	if(building == null) return res.status(400).send("No building founded with this id ");
 	//console.log("building events:" + buildingEvents);
+	console.log(building.events)
 	
-	const items = Object.values(buildingEvents).map((value)=>value.events);
-	var  itemObjects=[];
-	for(var i=0;i<items[0].length;i++){
-		console.log("96: "+items[0][i])
-		let event = await Event.find({_id:items[0][i]});
-		if(event.length !== 0)
-		{console.log("event:" + event)
-			itemObjects.push(event);}
-		
-	}
+	let events = building.events;
+	if (query) {
+		const regex = new RegExp(query, "i"); // create a case-insensitive regex from the query string
+		events = events.filter((event) => {
+		  return regex.test(event.title) || regex.test(event.eventDescription);
+		});
+	  }
 	
-	console.log("item objects: " +itemObjects.length);
-	res.status(200).json({events:itemObjects});
+	
+	  const activeEvents = events.filter((event) => event.condition === "in progress");
+	  const finishedEvents = events.filter((event) => event.condition === "finishedEvents");
+	  const pendingEvents = events.filter((event) => event.condition === "pending");
 
-	
-	
-	
+	  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pagedEvents = events.slice(startIndex, endIndex);
 
+  return res.status(200).json({
+    events: pagedEvents,
+    activeEvents: activeEvents.slice(startIndex, endIndex),
+    finishedEvents: finishedEvents.slice(startIndex, endIndex),
+    pendingEvents: pendingEvents.slice(startIndex, endIndex),
+    currentPage: page,
+    totalPages: Math.ceil(events.length / pageSize),
+  });
+	
 });
 
 //! @route GET /getEvent/:eventId
@@ -145,15 +149,15 @@ router.get("/getResidents/:buildingId",requireAuth, async (req, res,next) => {
 	let buildingResidents = await Building.find({buildingId}).select('userIDs');
 	if(!buildingResidents)  return res.status(400).send("No building founded with this id ");
 	const items = Object.values(buildingResidents).map((value)=>value.events);
-	var  itemObjects=[];
+	//var  building.events=[];
 	for(var i=0;i<items.length;i++){
 		let event = await User.find({_id:items[0][i]});
 		if(event == null) return res.status(400).send("No event founded with this id ");
-	itemObjects.push(event);
+	building.events.push(event);
 	}
 		
 	console.log("building residents:" + buildingResidents);
-	res.status(200).json({residents:itemObjects});
+	res.status(200).json({residents:building.events});
 });
 
 router.get("/:id/verify/:token", async (req, res) => {

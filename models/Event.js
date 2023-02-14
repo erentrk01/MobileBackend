@@ -5,7 +5,7 @@ const EventSchema = new mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User",
 	},
-	eventTitle:{
+	title:{
 		type: String,
 		required: true,
 		minlength: 3,

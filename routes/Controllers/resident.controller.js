@@ -102,6 +102,19 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
 		});
 	  }
 	
+	  //
+	  const condition = req.query.condition;
+  const functionalArea = req.query.functionalArea;
+  console.log(condition)
+
+  if (condition) {
+    events = events.filter((event) => event.condition === condition);
+  }
+
+  if (functionalArea) {
+    events = events.filter((event) => event.functionalArea === functionalArea);
+  }
+
 	
 	  const activeEvents = events.filter((event) => event.condition === "in progress");
 	  const finishedEvents = events.filter((event) => event.condition === "finishedEvents");
@@ -118,6 +131,8 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
     pendingEvents: pendingEvents.slice(startIndex, endIndex),
     currentPage: page,
     totalPages: Math.ceil(events.length / pageSize),
+	conditionFilter:condition,
+	functionalAreaFilter:functionalArea
   });
 	
 });

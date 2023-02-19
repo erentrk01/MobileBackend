@@ -81,46 +81,55 @@ router.delete("/deleteEvent/:id/:buildingId" ,requireAuth,async (req, res,next) 
 //! @desc Fetch all events array of a building from DB
 router.get("/fetchEvents/:buildingId",async (req, res,next) => {
 	
-	try {
-		const buildingId = req.params.buildingId;
-		let events = await Event.find({ buildingId })
-		  .populate("likes")
-		  .populate("userId")
-		  .exec();
+// email and buildingId are sent from frontend
+	// output two dim array
+	const query = req.query.q; // the search query from the frontend
+	const buildingId = req.params.buildingId;
 	
-		let query = req.query.q;
-		if (query) {
-		  const regex = new RegExp(query, "i");
-		  events = events.filter((event) => {
-			return regex.test(event.title) || regex.test(event.eventDescription);
-		  });
-		}
-	
-		const condition = req.query.condition;
-		const functionalArea = req.query.functionalArea;
-		if (condition) {
-		  events = events.filter((event) => event.condition === condition);
-		}
-		if (functionalArea) {
-		  events = events.filter((event) => event.functionalArea === functionalArea);
-		}
-	
-		const page = parseInt(req.query.page) || 1;
-		const pageSize = 5;
-		const startIndex = (page - 1) * pageSize;
-		const endIndex = startIndex + pageSize;
-		const pagedEvents = events.slice(startIndex, endIndex);
-	
-		return res.status(200).json({
-		  events: pagedEvents.reverse(),
-		  currentPage: page,
-		  totalPages: Math.ceil(events.length / pageSize),
-		  conditionFilter: condition,
-		  functionalAreaFilter: functionalArea,
+
+
+	let building= await Building.findOne({ buildingId }).populate('events');
+	// send the building events array
+	if(building == null) return res.status(400).send("No building founded with this id ");
+	//console.log("building events:" + buildingEvents);
+	console.log(building.events)
+
+	let events = building.events;
+	console.log(events)
+	if (query) {
+		const regex = new RegExp(query, "i"); // create a case-insensitive regex from the query string
+		events = events.filter((event) => {
+		  return regex.test(event.title) || regex.test(event.eventDescription);
 		});
-	  } catch (err) {
-		res.status(500).json({ error: err.message });
 	  }
+	  //
+  
+	  const condition = req.query.condition;
+	  const functionalArea = req.query.functionalArea;
+	  if (condition) {
+		events = events.filter((event) => event.condition === condition);
+	  }
+	  if (functionalArea) {
+		events = events.filter((event) => event.functionalArea === functionalArea);
+	  }
+  
+	  const page = parseInt(req.query.page) || 1;
+	  const pageSize = 5;
+	  const startIndex = (page - 1) * pageSize;
+	  const endIndex = startIndex + pageSize;
+	  const pagedEvents = events.slice(startIndex, endIndex);
+
+
+	  //
+
+  return res.status(200).json({
+    events: pagedEvents.reverse(),
+    currentPage: page,
+    totalPages: Math.ceil(events.length / pageSize),
+	conditionFilter: condition,
+	functionalAreaFilter: functionalArea,
+
+  });
 //*/
 /*	let building= await Building.findOne({ buildingId }).populate('events');
 	// send the building events array

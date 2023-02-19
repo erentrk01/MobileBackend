@@ -10,7 +10,8 @@ const authBuildingRoute = require("./routes/BuildingAccount.AuthOps.Route");
 const authUserRoute = require("./routes/UserAccount.AuthOps.Route");
 const signInUserRoute = require("./routes/Signin.AuthOps.Route");
 const residentControllerRoute = require("./routes/Controllers/resident.controller");
-
+const commentControllerRoute = require("./routes/Controllers/comment.controller");
+const likeControllerRoute = require("./routes/Controllers/like.controller");
 //
 
 
@@ -28,6 +29,8 @@ const port = process.env.PORT || 3000;
 app.use("/registerBuild", authBuildingRoute);
 app.use( authUserRoute);
 app.use(residentControllerRoute);
+app.use(commentControllerRoute);
+app.use(likeControllerRoute);
 app.use(signInUserRoute);
 
 app.get("/", (req, res) => {

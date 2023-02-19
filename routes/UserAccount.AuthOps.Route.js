@@ -5,7 +5,7 @@ const { Building } = require("../models/Building");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
 const passwordComplexity=require("joi-password-complexity");
-const generateAuthToken =require("../utils/jwt.utils");
+const { genAccessToken } = require("../utils/jwt.utils");
 
 //mail imports
 const {Token} = require("../models/token");
@@ -35,6 +35,7 @@ router.post("/registerUser", async (req, res,next) => {
 		email: Joi.string().required().email().label("Email"),
 		name:Joi.string().required().max(30),
 		password: passwordComplexity().required().label("Password"),
+		buildingId: Joi.string().required()
 	  });
 	  const { error } = schema.validate(req.body)
 	  if (error) return res.status(400).send(error.details[0].message);
@@ -56,21 +57,24 @@ router.post("/registerUser", async (req, res,next) => {
 
 	 let building = await Building.findOne({buildingId:buildingId});
 	 if(!building) return res.status(400).send("Building account does not exist,register failed");
-	
+	//
 
+	const salt = await bcrypt.genSalt(10);
+
+	const hashedpass  = await bcrypt.hash(req.body.password, salt)
+
+	
 			// create a new user
 	const  user = new User({
 		name: name,
 	buildingId:buildingId,
 	email: email,
-	password: save_password,
+	password: hashedpass,
 	salt:salt,
 	isManager:isManager
 	});
 
-	const salt = await bcrypt.genSalt(10);
-	user.password = await bcrypt.hash(user.password, salt);
-
+	
 	 let usr = await user.save();
 
 	 if (!usr.verified) {
@@ -88,11 +92,10 @@ router.post("/registerUser", async (req, res,next) => {
 		}
 	  }
 
+	  const accessToken = genAccessToken(usr);
+	  res.send(accessToken);
 
-
-	  const token = generateAuthToken(user);
-	  res.send(token);
-
+	
 	console.log("user registered successfully under a building account ");
 
 });

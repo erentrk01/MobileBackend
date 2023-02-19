@@ -2,12 +2,15 @@ const {Event} = require("../../models/Event");
 const {User} = require("../../models/User");
 const {Token}= require("../../models/token");
 const {Building} = require("../../models/Building");
+const {Like} = require("../../models/Like");
+const {Comment} = require("../../models/Comment");
 
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const requireAuth = require("../../middlewares/requireAuth");
 const _ = require('lodash');
+const shortid = require('shortid');
 
 
 
@@ -21,15 +24,13 @@ router.post("/createEvent",requireAuth,async (req, res,next) => {
 	console.log("email value:"+email);
 	let user = await User.findOne({email});
 	if(!user) return res.status(400).send("User does not exist, event creation failed");
-	const userId = user.userId;
+	const userId = user._id;
 	let date = new Date();
 	date= date.toString();
 	let event = await Event({buildingId,userId,title, eventDescription,functionalArea,condition,serviceContactPhone,date}).save();
 	
 	
 	if(!event) return res.status(400).send("Event creation failed");
-	res.status(200).send({buildingId,userId, title, eventDate, eventDescription,condition,serviceContactPhone});
-
 	const building = await Building.findOne({buildingId});
 
   if (!building) {
@@ -78,24 +79,23 @@ router.delete("/deleteEvent/:id/:buildingId" ,requireAuth,async (req, res,next) 
 
 //! @route GET /fetchEvents
 //! @desc Fetch all events array of a building from DB
-router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
+router.get("/fetchEvents/:buildingId",async (req, res,next) => {
+	
+  try {
 	// email and buildingId are sent from frontend
 	// output two dim array
-	const query = req.query.q; // the search query from the frontend
-	const buildingId = req.params.buildingId;
-	const page = parseInt(req.query.page) || 1; // the current page, defaulting to 1
+	let query = req.query.q; // the search query from the frontend
+	let buildingId = req.params.buildingId;
+	let page = parseInt(req.query.page) || 1; // the current page, defaulting to 1
 	const pageSize = 5; // the number of events to include on each page
-  
-	
+  //
 
-	let building= await Building.findOne({ buildingId }).populate('events');
-	// send the building events array
-	if(building == null) return res.status(400).send("No building founded with this id ");
-	//console.log("building events:" + buildingEvents);
-	console.log(building.events)
-	
-	let events = building.events;
-	if (query) {
+    let events = await Event.find({ buildingId })
+      .populate("likes")
+	  .populate("userId")
+      .exec();
+
+	  if (query) {
 		const regex = new RegExp(query, "i"); // create a case-insensitive regex from the query string
 		events = events.filter((event) => {
 		  return regex.test(event.title) || regex.test(event.eventDescription);
@@ -116,26 +116,37 @@ router.get("/fetchEvents/:buildingId" ,async (req, res,next) => {
   }
 
 	
-	  const activeEvents = events.filter((event) => event.condition === "in progress");
-	  const finishedEvents = events.filter((event) => event.condition === "finishedEvents");
-	  const pendingEvents = events.filter((event) => event.condition === "pending");
+
 
 	  const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const pagedEvents = events.slice(startIndex, endIndex);
+  console.log(pagedEvents)
 
   return res.status(200).json({
-    events: pagedEvents,
-    activeEvents: activeEvents.slice(startIndex, endIndex),
-    finishedEvents: finishedEvents.slice(startIndex, endIndex),
-    pendingEvents: pendingEvents.slice(startIndex, endIndex),
+    events: pagedEvents.reverse(),
     currentPage: page,
     totalPages: Math.ceil(events.length / pageSize),
 	conditionFilter:condition,
 	functionalAreaFilter:functionalArea
   });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+	
+//*/
+/*	let building= await Building.findOne({ buildingId }).populate('events');
+	// send the building events array
+	if(building == null) return res.status(400).send("No building founded with this id ");
+	//console.log("building events:" + buildingEvents);
+	console.log(building.events)
+	
+	let events = building.events;
+	*/
 	
 });
+
+
 
 //! @route GET /getEvent/:eventId
 //! @desc Fetch a event from DB
@@ -219,5 +230,8 @@ router.get("/:id/verify/:token", async (req, res) => {
 	res.status(200).json({building:building});
   })
 
+
+
+  
 
 module.exports = router;

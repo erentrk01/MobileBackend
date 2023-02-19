@@ -1,4 +1,31 @@
 const mongoose = require("mongoose");
+const LikeSchema = new mongoose.Schema({
+	user: {
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: "User",
+	  required: true,
+	},
+	event: {
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: "Event",
+	  required: true,
+	},
+  });
+
+  const CommentSchema = new mongoose.Schema({
+	user: {
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: "User",
+	  required: true,
+	},
+	content: {
+	  type: String,
+	  required: true,
+	},
+  });
+  
+  
+
 
 const EventSchema = new mongoose.Schema({
 	userId:{
@@ -34,7 +61,16 @@ const EventSchema = new mongoose.Schema({
 	date: {
 		type: String,
 		//required: true,
-	}
+	},
+	  building: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Building',
+	  },
+	  likes:[LikeSchema],
+	  comments:[CommentSchema],
+	  url:{
+		type: String,
+	  }
 });
 
 const Event = mongoose.model("Event", EventSchema);

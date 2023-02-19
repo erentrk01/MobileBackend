@@ -81,59 +81,46 @@ router.delete("/deleteEvent/:id/:buildingId" ,requireAuth,async (req, res,next) 
 //! @desc Fetch all events array of a building from DB
 router.get("/fetchEvents/:buildingId",async (req, res,next) => {
 	
-  try {
-	// email and buildingId are sent from frontend
-	// output two dim array
-	let query = req.query.q; // the search query from the frontend
-	let buildingId = req.params.buildingId;
-	let page = parseInt(req.query.page) || 1; // the current page, defaulting to 1
-	const pageSize = 5; // the number of events to include on each page
-  //
-
-    let events = await Event.find({ buildingId })
-      .populate("likes")
-	  .populate("userId")
-      .exec();
-
-	  if (query) {
-		const regex = new RegExp(query, "i"); // create a case-insensitive regex from the query string
-		events = events.filter((event) => {
-		  return regex.test(event.title) || regex.test(event.eventDescription);
+	try {
+		const buildingId = req.params.buildingId;
+		let events = await Event.find({ buildingId })
+		  .populate("likes")
+		  .populate("userId")
+		  .exec();
+	
+		let query = req.query.q;
+		if (query) {
+		  const regex = new RegExp(query, "i");
+		  events = events.filter((event) => {
+			return regex.test(event.title) || regex.test(event.eventDescription);
+		  });
+		}
+	
+		const condition = req.query.condition;
+		const functionalArea = req.query.functionalArea;
+		if (condition) {
+		  events = events.filter((event) => event.condition === condition);
+		}
+		if (functionalArea) {
+		  events = events.filter((event) => event.functionalArea === functionalArea);
+		}
+	
+		const page = parseInt(req.query.page) || 1;
+		const pageSize = 5;
+		const startIndex = (page - 1) * pageSize;
+		const endIndex = startIndex + pageSize;
+		const pagedEvents = events.slice(startIndex, endIndex);
+	
+		return res.status(200).json({
+		  events: pagedEvents.reverse(),
+		  currentPage: page,
+		  totalPages: Math.ceil(events.length / pageSize),
+		  conditionFilter: condition,
+		  functionalAreaFilter: functionalArea,
 		});
+	  } catch (err) {
+		res.status(500).json({ error: err.message });
 	  }
-	
-	  //
-	  const condition = req.query.condition;
-  const functionalArea = req.query.functionalArea;
-  console.log(condition)
-
-  if (condition) {
-    events = events.filter((event) => event.condition === condition);
-  }
-
-  if (functionalArea) {
-    events = events.filter((event) => event.functionalArea === functionalArea);
-  }
-
-	
-
-
-	  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const pagedEvents = events.slice(startIndex, endIndex);
-  console.log(pagedEvents)
-
-  return res.status(200).json({
-    events: pagedEvents.reverse(),
-    currentPage: page,
-    totalPages: Math.ceil(events.length / pageSize),
-	conditionFilter:condition,
-	functionalAreaFilter:functionalArea
-  });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-	
 //*/
 /*	let building= await Building.findOne({ buildingId }).populate('events');
 	// send the building events array

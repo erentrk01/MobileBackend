@@ -1,8 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+
 const cors = require("cors");
 require("dotenv").config();
+const {updatePollsRemainingTime} = require("./utils/updateRemainTime");
 
 
 // Import Routes
@@ -11,6 +13,7 @@ const authUserRoute = require("./routes/UserAccount.AuthOps.Route");
 const signInUserRoute = require("./routes/Signin.AuthOps.Route");
 const residentControllerRoute = require("./routes/Controllers/resident.controller");
 const commentControllerRoute = require("./routes/Controllers/comment.controller");
+const pollRoute = require("./routes/Controllers/poll.controller");
 const likeControllerRoute = require("./routes/Controllers/like.controller");
 //
 
@@ -32,6 +35,7 @@ app.use(residentControllerRoute);
 app.use(commentControllerRoute);
 app.use(likeControllerRoute);
 app.use(signInUserRoute);
+app.use(pollRoute);
 
 app.get("/", (req, res) => {
 	res.send("APP IS RUNNING");
@@ -51,7 +55,15 @@ mongoose.connect(mongoUri, {
   mongoose.connection.on("error", (err) => {
 	console.error("Error connecting to mongo", err);
   });
+
+ // Call the function when you start your server
+updatePollsRemainingTime();
+
+// Set up a timer to periodically update remaining time (every minute in this example)
+setInterval(updatePollsRemainingTime, 60000);
   
+ 
+
 
 app.listen(port, () => {
 	console.log(`Server running on port ${port}`);

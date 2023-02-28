@@ -74,7 +74,7 @@ router.post("/", async (req, res) => {
 	
 	//console.log(Math.floor(100000 + Math.random() * 900000));
 	// save building information
-	
+
 	
 	const save_building = await new Building({buildingId:buildingId,buildingName:req.body.buildingName,buildingAddress:req.body.buildingAddress}).save();
 

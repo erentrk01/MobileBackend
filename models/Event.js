@@ -25,6 +25,24 @@ const LikeSchema = new mongoose.Schema({
   });
   
   
+  const FileSchema = new mongoose.Schema({
+	filename: {
+	  type: String,
+	  required: true,
+	},
+	mimetype: {
+	  type: String,
+	  required: true,
+	},
+	size: {
+	  type: Number,
+	  required: true,
+	},
+	url: {
+	  type: String,
+	  required: true,
+	},
+  });
 
 
 const EventSchema = new mongoose.Schema({
@@ -68,6 +86,7 @@ const EventSchema = new mongoose.Schema({
 	  },
 	  likes:[LikeSchema],
 	  comments:[CommentSchema],
+	  files: [FileSchema],
 	  url:{
 		type: String,
 	  }

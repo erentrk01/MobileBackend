@@ -34,7 +34,12 @@ const UserSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false,
 		index: true,
-	  }
+	  },
+	  pollsVoted: [{ pollId: { type: mongoose.Schema.Types.ObjectId, ref: "Poll" }, optionIndex: Number }],
+	  pollsCreated: [{ 
+		type: mongoose.Schema.Types.ObjectId, 
+		ref: 'Poll' 
+	}]
 });
 
 const User = mongoose.model("User", UserSchema);
